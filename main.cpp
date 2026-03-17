@@ -1,4 +1,4 @@
- #include <iostream>
+#include <iostream>
 #include <cstring>
 #include <vector>
 
@@ -197,3 +197,118 @@ void Player::setTeam(Team* new_team) {
 Team* Player::getTeam() const {
     return team;
 }
+
+class Team {
+private:
+    char* name;
+    std::vector<Player *> players;
+    Coach *headCoach;
+    long budget;
+public:
+    Team();
+    Team(char*);
+    Team(char*, std::vector<Player*>);
+    Team(char*, std::vector<Player*>, Coach*);
+    Team(char*, std::vector<Player*>, Coach*, long);
+    Team(const Team &obj);
+    ~Team();
+    Team& operator=(const Team &obj);
+    friend std::ostream& operator<<(std::ostream&, const Team&);
+    friend std::istream& operator>>(std::istream&, Team&);
+    void setName(const char*);
+    const char* getName () const;
+};
+
+Team::Team() {
+    name=strcpy(new char[4], "N/A");
+    headCoach=nullptr;
+    budget=0;
+}
+
+Team::Team(char *name) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    headCoach=nullptr;
+    budget=0;
+}
+
+Team::Team(char *name, std::vector<Player *>players) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->players=players;
+    headCoach=nullptr;
+    budget=0;
+}
+Team::Team(char*name, std::vector<Player*>players, Coach* headCoach) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->players=players;
+    this->headCoach=headCoach;
+    budget=0;
+}
+
+Team::Team(char*name, std::vector<Player*>players, Coach* headCoach, long budget) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->players=players;
+    this->headCoach=headCoach;
+    this->budget=budget;
+}
+
+Team::Team(const Team &obj) {
+    this->name=strcpy(new char[strlen(obj.name)+1], obj.name);
+    this->players=obj.players;
+    this->headCoach=obj.headCoach;
+    this->budget=obj.budget;
+}
+
+Team::~Team() {
+    delete[] name;
+}
+
+Team &Team::operator=(const Team &obj) {
+    if (this==&obj) return *this;
+    delete[] name;
+    this->name=strcpy(new char[strlen(obj.name)+1], obj.name);
+    this->players=obj.players;
+    this->headCoach=obj.headCoach;
+    this->budget=obj.budget;
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Team& obj) {
+    os<<"Name: "<<obj.name<<"\n";
+    os << "Players: \n";
+    for (int i = 0; i < obj.players.size(); i++)
+        os << *obj.players[i] << "\n";
+
+    if (obj.headCoach != nullptr)
+        os << "Head Coach: " << obj.headCoach->getName() << "\n";
+    else
+        os << "Head Coach: N/A\n";
+    os<<"Budget: "<<obj.budget;
+    return os;
+}
+
+std::istream& operator>>(std::istream &is, Team &obj) {
+    char name[256];
+    long buget;
+    std::cout<<"Name:";
+    is>>name;
+    obj.setName(name);
+
+    std::cout<<"Budget :";
+    is>>buget;
+    obj.budget=buget;
+    return is;
+}
+
+void Team::setName(const char* name) {
+    delete[] this->name;
+    this->name=strcpy(new char[strlen(name)+1], name);
+}
+
+const char* Team::getName() const{
+    return this->name;
+}
+
+
+
+
+
