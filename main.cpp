@@ -76,6 +76,34 @@ public:
     const char* getName() const;
 };
 
+class Match {
+private:
+    Team* home_team;
+    Team* away_team;
+    float home_possession;
+    int home_shots_on_target;
+    int away_shots_on_target;
+    int home_goals;
+    int away_goals;
+public:
+    Match();
+    Match(Team*);
+    Match(Team*, Team*);
+    Match(Team*, Team*, float);
+    Match(Team*, Team*, float, int);
+    Match(Team*, Team*, float, int, int);
+    Match(Team*, Team*, float, int, int, int);
+    Match(Team*, Team*, float, int, int, int, int);
+    Match(const Match &obj);
+    Match& operator=(const Match &obj);
+    friend std::ostream& operator<<(std:: ostream& os, const Match& obj);
+    friend std::istream& operator>>(std::istream &is, Match& obj);
+    void setHomeTeam(Team*);
+    void setAwayTeam(Team*);
+    Team* getHomeTeam() const;
+    Team* getAwayTeam() const;
+};
+
 
 
 int Player::no_players = 0;
@@ -449,4 +477,165 @@ std::istream &operator>>(std::istream &is, Coach &obj) {
     is>>boost;
     obj.manager_boost=boost;
     return is;
+}
+
+Match::Match() {
+    home_team=nullptr;
+    away_team=nullptr;
+    home_possession=0;
+    home_shots_on_target=0;
+    away_shots_on_target=0;
+    home_goals=0;
+    away_goals=0;
+}
+Match::Match(Team *home_team) {
+    this->home_team=home_team;
+    away_team=nullptr;
+    home_possession=0;
+    home_shots_on_target=0;
+    away_shots_on_target=0;
+    home_goals=0;
+    away_goals=0;
+}
+Match::Match(Team *home_team, Team *away_team) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    home_possession=0;
+    home_shots_on_target=0;
+    away_shots_on_target=0;
+    home_goals=0;
+    away_goals=0;
+}
+Match::Match(Team *home_team, Team *away_team, float home_possession) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    this->home_possession=home_possession;
+    home_shots_on_target=0;
+    away_shots_on_target=0;
+    home_goals=0;
+    away_goals=0;
+}
+
+Match::Match(Team *home_team, Team *away_team, float home_possession, int home_shots_on_target) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    this->home_possession=home_possession;
+    this->home_shots_on_target=home_shots_on_target;
+    away_shots_on_target=0;
+    home_goals=0;
+    away_goals=0;
+}
+
+Match::Match(Team *home_team, Team *away_team, float home_possession, int home_shots_on_target, int away_shots_on_target) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    this->home_possession=home_possession;
+    this->home_shots_on_target=home_shots_on_target;
+    this->away_shots_on_target=away_shots_on_target;
+    home_goals=0;
+    away_goals=0;
+}
+Match::Match(Team *home_team, Team *away_team, float home_possession, int home_shots_on_target, int away_shots_on_target, int home_goals) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    this->home_possession=home_possession;
+    this->home_shots_on_target=home_shots_on_target;
+    this->away_shots_on_target=away_shots_on_target;
+    this->home_goals=home_goals;
+    away_goals=0;
+}
+Match::Match(Team *home_team, Team *away_team, float home_possession, int home_shots_on_target, int away_shots_on_target, int home_goals, int away_goals) {
+    this->home_team=home_team;
+    this->away_team=away_team;
+    this->home_possession=home_possession;
+    this->home_shots_on_target=home_shots_on_target;
+    this->away_shots_on_target=away_shots_on_target;
+    this->home_goals=home_goals;
+    this->away_goals=away_goals;
+}
+
+Match::Match(const Match &obj) {
+    this->home_team=obj.home_team;
+    this->away_team=obj.away_team;
+    this->home_possession=obj.home_possession;
+    this->home_shots_on_target=obj.home_shots_on_target;
+    this->away_shots_on_target=obj.away_shots_on_target;
+    this->home_goals=obj.home_goals;
+    this->away_goals=obj.away_goals;
+}
+
+Match &Match::operator=(const Match &obj) {
+    if (this==&obj) return *this;
+    this->home_team=obj.home_team;
+    this->away_team=obj.away_team;
+    this->home_possession=obj.home_possession;
+    this->home_shots_on_target=obj.home_shots_on_target;
+    this->away_shots_on_target=obj.away_shots_on_target;
+    this->home_goals=obj.home_goals;
+    this->away_goals=obj.away_goals;
+    return *this;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Match& obj) {
+    if (obj.home_team != nullptr)
+        os << "Home team: " << obj.home_team->getName() << "\n";
+    else
+        os << "Home team: N/A\n";
+
+    if (obj.away_team != nullptr)
+        os << "Away team: " << obj.away_team->getName() << "\n";
+    else
+        os << "Away team: N/A\n";
+
+    os << "Home possession: " << obj.home_possession << "%\n";
+    os << "Home shots on target: " << obj.home_shots_on_target << "\n";
+    os << "Away shots on target: " << obj.away_shots_on_target << "\n";
+    os << "Score: " << obj.home_goals << " - " << obj.away_goals << "\n";
+
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Match& obj) {
+    float possession;
+    int home_shots;
+    int away_shots;
+    int home_goals;
+    int away_goals;
+    std::cout << "Home possession: ";
+    is >> possession;
+    obj.home_possession = possession;
+    std::cout<<"\n";
+    std::cout << "Home shots on target: ";
+    is >> home_shots;
+    obj.home_shots_on_target = home_shots;
+    std::cout<<"\n";
+    std::cout << "Away shots on target: ";
+    is >> away_shots;
+    obj.away_shots_on_target = away_shots;
+    std::cout<<"\n";
+    std::cout << "Home goals: ";
+    is >> home_goals;
+    obj.home_goals = home_goals;
+    std::cout<<"\n";
+    std::cout << "Away goals: ";
+    is >> away_goals;
+    obj.away_goals = away_goals;
+    return is;
+}
+
+void Match::setHomeTeam(Team* new_team) {
+    home_team = new_team;
+}
+
+void Match::setAwayTeam(Team* new_team) {
+    away_team = new_team;
+}
+
+Team* Match::getHomeTeam() const {
+    return home_team;
+}
+
+Team* Match::getAwayTeam() const {
+    return away_team;
 }
