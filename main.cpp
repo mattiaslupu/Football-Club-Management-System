@@ -3,7 +3,7 @@
 #include <vector>
 
 class Team;
-
+class Coach;
 class Player {
     static int no_players;
     const int id;
@@ -28,6 +28,56 @@ public:
     void setTeam(Team* new_team);
     Team* getTeam() const;
 };
+
+
+
+class Team {
+private:
+    char* name;
+    std::vector<Player *> players;
+    Coach *headCoach;
+    long budget;
+public:
+    Team();
+    Team(char*);
+    Team(char*, std::vector<Player*>);
+    Team(char*, std::vector<Player*>, Coach*);
+    Team(char*, std::vector<Player*>, Coach*, long);
+    Team(const Team &obj);
+    ~Team();
+    Team& operator=(const Team &obj);
+    friend std::ostream& operator<<(std::ostream&, const Team&);
+    friend std::istream& operator>>(std::istream&, Team&);
+    void setName(const char*);
+    const char* getName () const;
+};
+
+class Coach {
+private:
+    char* name;
+    int age;
+    int experience_years;
+    float manager_boost;
+    Team* team;
+
+public:
+    Coach();
+    Coach(char*);
+    Coach(char*, int);
+    Coach(char*, int, int);
+    Coach(char*, int, int, float);
+    Coach(char*, int, int, float, Team*);
+    Coach(const Coach &obj);
+    ~Coach();
+    Coach& operator=(const Coach &obj);
+    friend std::ostream& operator<<(std::ostream&, const Coach &);
+    friend std::istream& operator>>(std::istream&, Coach &);
+    void setName(char *new_name);
+    const char* getName() const;
+};
+
+
+
 int Player::no_players = 0;
 
 Player::Player():id(no_players++) {
@@ -198,27 +248,6 @@ Team* Player::getTeam() const {
     return team;
 }
 
-class Team {
-private:
-    char* name;
-    std::vector<Player *> players;
-    Coach *headCoach;
-    long budget;
-public:
-    Team();
-    Team(char*);
-    Team(char*, std::vector<Player*>);
-    Team(char*, std::vector<Player*>, Coach*);
-    Team(char*, std::vector<Player*>, Coach*, long);
-    Team(const Team &obj);
-    ~Team();
-    Team& operator=(const Team &obj);
-    friend std::ostream& operator<<(std::ostream&, const Team&);
-    friend std::istream& operator>>(std::istream&, Team&);
-    void setName(const char*);
-    const char* getName () const;
-};
-
 Team::Team() {
     name=strcpy(new char[4], "N/A");
     headCoach=nullptr;
@@ -299,9 +328,9 @@ std::istream& operator>>(std::istream &is, Team &obj) {
     return is;
 }
 
-void Team::setName(const char* name) {
+void Team::setName(const char* new_name) {
     delete[] this->name;
-    this->name=strcpy(new char[strlen(name)+1], name);
+    this->name=strcpy(new char[strlen(new_name)+1], new_name);
 }
 
 const char* Team::getName() const{
@@ -310,5 +339,114 @@ const char* Team::getName() const{
 
 
 
+Coach::Coach() {
+    name=strcpy(new char[4], "N/A");
+    age=0;
+    experience_years=0;
+    manager_boost=0;
+    team=nullptr;
+}
+
+Coach::Coach(char *name) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    age=0;
+    experience_years=0;
+    manager_boost=0;
+    team=nullptr;
+}
+
+Coach::Coach(char *name, int age) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->age=age;
+    experience_years=0;
+    manager_boost=0;
+    team=nullptr;
+}
 
 
+Coach::Coach(char *name, int age, int experience_years) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->age=age;
+    this->experience_years=experience_years;
+    manager_boost=0;
+    team=nullptr;
+}
+
+Coach::Coach(char *name, int age, int experience_years, float manager_boost) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->age=age;
+    this->experience_years=experience_years;
+    this->manager_boost=manager_boost;
+    team=nullptr;
+}
+
+
+Coach::Coach(char *name, int age, int experience_years, float manager_boost, Team *team) {
+    this->name=strcpy(new char[strlen(name)+1], name);
+    this->age=age;
+    this->experience_years=experience_years;
+    this->manager_boost=manager_boost;
+    this->team=team;
+}
+
+Coach::Coach(const Coach &obj) {
+    this->name=strcpy(new char[strlen(obj.name)+1], obj.name);
+    this->age=obj.age;
+    this->experience_years=obj.experience_years;
+    this->manager_boost=obj.manager_boost;
+    this->team=obj.team;
+}
+
+Coach::~Coach() {
+    delete[] name;
+}
+
+Coach& Coach::operator=(const Coach &obj) {
+    if (this==&obj) return *this;
+    delete[] name;
+    this->name=strcpy(new char[strlen(obj.name)+1], obj.name);
+    this->age=obj.age;
+    this->experience_years=obj.experience_years;
+    this->manager_boost=obj.manager_boost;
+    this->team=obj.team;
+    return *this;
+}
+
+const char *Coach::getName() const {
+    return this->name;
+}
+void Coach::setName(char *new_name) {
+    delete[] this->name;
+    this->name = strcpy(new char[strlen(new_name)+1], new_name);
+}
+
+std::ostream &operator<<(std::ostream &os, const Coach &obj) {
+    os<<"Name: "<<obj.getName()<<"\n";
+    os<<"Age :"<<obj.age<<"\n";
+    os<<"Years of experience: "<<obj.experience_years<<"\n";
+    os<<"Manager boost: "<<obj.manager_boost<<"\n";
+    if (obj.team != nullptr)
+        os << "Team coached: " << obj.team->getName() << "\n";
+    else
+        os << "Team coached: N/A\n";
+    return os;
+}
+
+std::istream &operator>>(std::istream &is, Coach &obj) {
+    char name[256];
+    int new_age, years;
+    float boost;
+    std::cout<<"Name: \n";
+    is>>name;
+    obj.setName(name);
+    std::cout<<"Age : \n";
+    is>>new_age;
+    obj.age=new_age;
+    std::cout<<"Years of experience: \n";
+    is>>years;
+    obj.experience_years=years;
+    std::cout<<"Manager boost: \n";
+    is>>boost;
+    obj.manager_boost=boost;
+    return is;
+}
