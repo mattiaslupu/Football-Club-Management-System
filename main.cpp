@@ -69,6 +69,7 @@ public:
     void remove_player(int player_id);
     int getId() const;
     int getPlayersCount() const;
+    void setHeadCoach(Coach* coach);
 };
 
 class Coach {
@@ -131,8 +132,24 @@ public:
     double victory_probability();
     void match_simulation();
     int getId() const;
+    void setHomePossession(float);
 };
 
+class Menu {
+private:
+    std::vector<Player*> players;
+    std::vector<Team*> teams;
+    std::vector<Coach*> coaches;
+    std::vector<Match*> matches;
+public:
+    Menu();
+    ~Menu();
+    void start();
+    void player_menu();
+    void coach_menu();
+    void team_menu();
+    void match_menu();
+};
 
 
 int Player::no_players = 0;
@@ -461,6 +478,11 @@ const char* Team::getName() const{
     return this->name;
 }
 
+void Team::setHeadCoach(Coach* coach) {
+    headCoach = coach;
+}
+
+
 double Team::calculate_team_force() {
     if (players.empty()) return 0;
     double sum=0;
@@ -781,6 +803,10 @@ void Match::setAwayTeam(Team* new_team) {
     away_team = new_team;
 }
 
+void Match::setHomePossession(float possession) {
+    home_possession = possession;
+}
+
 int Match::getId() const {
     return id;
 }
@@ -838,7 +864,451 @@ void Match::match_simulation() {
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    std::cout << "\n=== FINAL DE JOC ===\n";
+    std::cout << "\n=== FULL TIME ===\n";
     std::cout << home_team->getName() << " " << home_goals << " - " << away_goals << " " << away_team->getName() << "\n";
     std::cout << "Shots on target: " << home_shots_on_target << " - " << away_shots_on_target << "\n";
+}
+
+
+Menu::Menu() {}
+
+Menu::~Menu() {
+    for (int i=0; i<players.size(); i++) delete players[i];
+    for (int i=0; i<teams.size(); i++) delete teams[i];
+    for (int i=0; i<coaches.size(); i++) delete coaches[i];
+    for (int i=0; i<matches.size(); i++) delete matches[i];
+}
+
+void Menu::start() {
+    bool ok=true;
+    int option;
+    while (ok==true) {
+        std::cout << "========================================\n";
+        std::cout << "    FOOTBALL CLUB MANAGEMENT SYSTEM\n";
+        std::cout << "========================================\n";
+        std::cout << "1. Player\n";
+        std::cout << "2. Coach\n";
+        std::cout << "3. Team\n";
+        std::cout << "4. Match\n";
+        std::cout << "0. Exit\n";
+        std::cout << "========================================\n";
+        std::cout << "Choose an option: ";
+        std::cin >> option;
+
+        switch (option) {
+            case 1: player_menu(); break;
+            case 2: coach_menu(); break;
+            case 3: team_menu(); break;
+            case 4: match_menu(); break;
+            case 0: std::cout << "Goodbye!\n"; ok=false; break;
+            default: std::cout << "Invalid option!\n"; break;
+        }
+
+    }
+}
+
+void Menu::player_menu() {
+    int option;
+    bool ok=true;
+    while (ok) {
+    std::cout << "========================================\n";
+    std::cout << "           PLAYER MENU\n";
+    std::cout << "========================================\n";
+    std::cout << "1. Add Player\n";
+    std::cout << "2. Display Players\n";
+    std::cout << "3. Add Rating\n";
+    std::cout << "4. Calculate Value\n";
+    std::cout << "0. Back\n";
+    std::cout << "========================================\n";
+    std::cout << "Choose an option: ";
+    std::cin >> option;
+        switch (option) {
+            case 1: {
+                Player *p= new Player();
+                std::cin>> *p;
+                players.push_back(p);
+                break;
+            }
+            case 2: {
+                for (int i=0; i<players.size(); i++)
+                    std::cout<<*players[i]<<"\n";
+                break;
+            }
+
+            case 3: {
+                int id;
+                double new_rating;
+                std::cout<<"Player ID: ";
+                std::cin>>id;
+                std::cout<<"New rating: ";
+                std::cin>>new_rating;
+                bool found=false;
+                for (int i=0; i<players.size(); i++) {
+                    if (players[i]->getId()==id) {
+                        players[i]->add_rating(new_rating);
+                        found=true;
+                    }
+                }
+                if (!found)
+                    std::cout<<"PLayer not found\n";
+                break;
+
+            }
+            case 4: {
+                int id;
+                bool found=false;
+                std::cout<<"Player ID: ";
+                std::cin>>id;
+                for (int i=0; i<players.size(); i++) {
+                    if (players[i]->getId()==id) {
+                        found=true;
+                        std::cout<<"Player value: "<<players[i]->calculate_value();
+                    }
+                }
+                if (!found)
+                    std::cout<<"PLayer not found\n";
+                break;
+            }
+            case 0: std::cout << "Goodbye!\n"; ok=false; break;
+            default: std::cout << "Invalid option!\n"; break;
+        }
+    }
+}
+
+
+void Menu::team_menu() {
+    int option;
+    bool ok=true;
+    while (ok) {
+        std::cout << "========================================\n";
+        std::cout << "           TEAM MENU\n";
+        std::cout << "========================================\n";
+        std::cout << "1. Add Team\n";
+        std::cout << "2. Display Teams\n";
+        std::cout << "3. Add Player to Team\n";
+        std::cout << "4. Remove Player from Team\n";
+        std::cout << "5. Set Head Coach\n";
+        std::cout << "6. Calculate Team Force\n";
+        std::cout << "7. Pay Salaries\n";
+        std::cout << "0. Back\n";
+        std::cout << "========================================\n";
+        std::cout << "Choose an option: ";
+        std::cin>>option;
+        switch(option) {
+            case 1: {
+                Team *t= new Team();
+                std::cout<<"New Team: \n";
+                std::cin>>*t;
+                teams.push_back(t);
+                break;
+
+            }
+            case 2: {
+                for (int i=0; i<teams.size(); i++)
+                    std::cout<<*teams[i]<<"\n";
+                break;
+            }
+            case 3: {
+                int team_id, player_id;
+                std::cout << "Team id: \n";
+                std::cin >> team_id;
+                std::cout << "Player id: \n";
+                std::cin >> player_id;
+                Team* t = nullptr;
+                Player* p = nullptr;
+                for (int i=0; i<teams.size(); i++)
+                    if (teams[i]->getId() == team_id)
+                        t = teams[i];
+                for (int i=0; i<players.size(); i++)
+                    if (players[i]->getId() == player_id)
+                        p = players[i];
+                if (t != nullptr && p != nullptr) {
+                    t->add_player(p);
+                    p->setTeam(t);
+                    std::cout << "Player added to team!\n";
+                } else {
+                    std::cout << "Team or player not found!\n";
+                }
+                break;
+            }
+            case 4: {
+                int team_id, player_id;
+                std::cout << "Team id: \n";
+                std::cin >> team_id;
+                std::cout << "Player id: \n";
+                std::cin >> player_id;
+                Team* t = nullptr;
+                for (int i=0; i<teams.size(); i++)
+                    if (teams[i]->getId() == team_id)
+                        t = teams[i];
+                if (t != nullptr) {
+                    t->remove_player(player_id);
+                    std::cout<<"Player removed from the team\n";
+                } else {
+                    std::cout << "Team not found!\n";
+                }
+                break;
+            }
+            case 5: {
+                if (teams.empty() || coaches.empty()) {
+                    std::cout << "No teams or coaches!\n";
+                    break;
+                }
+                int team_id, coach_id;
+                std::cout << "Team id: \n";
+                std::cin >> team_id;
+                std::cout << "Coach id: \n";
+                std::cin >> coach_id;
+                Team* t = nullptr;
+                Coach* c = nullptr;
+                for (int i=0; i<teams.size(); i++)
+                    if (teams[i]->getId() == team_id)
+                        t = teams[i];
+                for (int i=0; i<coaches.size(); i++)
+                    if (coaches[i]->getId() == coach_id)
+                        c = coaches[i];
+                if (t != nullptr && c != nullptr) {
+                    t->setHeadCoach(c);
+                    std::cout << "Head coach set!\n";
+                } else {
+                    std::cout << "Team or coach not found!\n";
+                }
+                break;
+            }
+            case 6: {
+                int id;
+                std::cout<<"Id: ";
+                std::cin>>id;
+                bool found=false;
+                for (int i = 0; i < teams.size(); i++) {
+                    if ( teams[i]->getId() == id) {
+                        std::cout << "Team Force: "<<teams[i]->calculate_team_force()<<"\n";
+                        found=true;
+                    }
+                }
+                if (!found) {
+                    std::cout<<"Team not found\n";
+                }
+                break;
+            }
+            case 7: {
+                int id;
+                std::cout<<"Id: \n";
+                std::cin>>id;
+                bool found=false;
+                for (int i = 0; i < teams.size(); i++) {
+                    if ( teams[i]->getId() == id) {
+                        teams[i]->pay_salaries();
+                        found=true;
+                    }
+                }
+                if (!found) std::cout<<"Team not found\n";
+                break;
+            }
+            case 0: std::cout << "Goodbye!\n"; ok=false; break;
+            default: std::cout << "Invalid option!\n"; break;
+        }
+    }
+}
+
+void Menu::coach_menu() {
+    bool ok=true;
+    int option;
+    while (ok) {
+        std::cout << "========================================\n";
+        std::cout << "           COACH MENU\n";
+        std::cout << "========================================\n";
+        std::cout << "1. Add Coach\n";
+        std::cout << "2. Display Coaches\n";
+        std::cout << "3. Calculate Efficiency\n";
+        std::cout << "4. Improve Coach\n";
+        std::cout << "0. Back\n";
+        std::cout << "========================================\n";
+        std::cout << "Choose an option: \n";
+        std::cin >> option;
+        switch (option) {
+            case 1: {
+                Coach *c= new Coach();
+                std::cin>>*c;
+                coaches.push_back(c);
+                break;
+            }
+            case 2: {
+                if (coaches.size()!=0) {
+                    for (int i=0; i<coaches.size(); i++) {
+                        std::cout<<*coaches[i]<<"\n";
+                    }
+                }
+                else std::cout<<"There are no coaches\n";
+                break;
+            }
+            case 3: {
+                int id;
+                std::cout<<"Id: \n";
+                std::cin>>id;
+                bool found=false;
+                for (int i=0; i<coaches.size(); i++) {
+                    if (coaches[i]->getId()==id) {
+                        found=true;
+                        std::cout<<"Coach effiency: "<<coaches[i]->effiency_calculator()<<"\n";
+                    }
+                }
+                if (!found) std::cout<<"Coach not found";
+                break;
+            }
+            case 4: {
+                int id;
+                std::cout<<"Id: \n";
+                std::cin>>id;
+                bool found=false;
+                for (int i=0; i<coaches.size(); i++) {
+                    if (coaches[i]->getId()==id) {
+                        found=true;
+                        std::cout<<"Old efficiency: "<<coaches[i]->effiency_calculator()<<"\n";
+                        coaches[i]->coach_improvement();
+                        std::cout<<"New efficiency: "<<coaches[i]->effiency_calculator()<<"\n";
+                    }
+                }
+                if (!found) std::cout<<"Coach not found";
+                break;
+            }
+            case 0: std::cout << "Goodbye!\n"; ok=false; break;
+            default: std::cout << "Invalid option!\n"; break;
+        }
+    }
+}
+
+
+void Menu::match_menu() {
+    bool ok = true;
+    int option;
+    while (ok) {
+        std::cout << "========================================\n";
+        std::cout << "           MATCH MENU\n";
+        std::cout << "========================================\n";
+        std::cout << "1. Create Match\n";
+        std::cout << "2. Display Matches\n";
+        std::cout << "3. Set Home Team\n";
+        std::cout << "4. Set Away Team\n";
+        std::cout << "5. Set Possession\n";
+        std::cout << "6. Victory Probability\n";
+        std::cout << "7. Simulate Match\n";
+        std::cout << "0. Back\n";
+        std::cout << "========================================\n";
+        std::cout << "Choose an option: \n";
+        std::cin >> option;
+        switch (option) {
+            case 1: {
+                Match *m = new Match();
+                matches.push_back(m);
+                std::cout << "Match created with id: " << m->getId() << "\n";
+                break;
+            }
+            case 2: {
+                if (matches.size()!=0) {
+                    for (int i = 0; i<matches.size(); i++) {
+                        std::cout<<*matches[i]<<"\n";
+                    }
+                }
+                else std::cout<<"There are no matches\n";
+                break;
+            }
+            case 3: {
+                int match_id, team_id;
+                std::cout << "Match id: ";
+                std::cin >> match_id;
+                std::cout << "Team id: ";
+                std::cin >> team_id;
+                Match* m = nullptr;
+                Team* t = nullptr;
+                for (int i=0; i<matches.size(); i++)
+                    if (matches[i]->getId() == match_id)
+                        m = matches[i];
+                for (int i=0; i<teams.size(); i++)
+                    if (teams[i]->getId() == team_id)
+                        t = teams[i];
+                if (m != nullptr && t != nullptr) {
+                    m->setHomeTeam(t);
+                    std::cout << "Home team set!\n";
+                }
+                else std::cout << "Match or team not found!\n";
+                break;
+            }
+            case 4: {
+                int match_id, team_id;
+                std::cout << "Match id: ";
+                std::cin >> match_id;
+                std::cout << "Team id: ";
+                std::cin >> team_id;
+                Match* m = nullptr;
+                Team* t = nullptr;
+                for (int i=0; i<matches.size(); i++)
+                    if (matches[i]->getId() == match_id)
+                        m = matches[i];
+                for (int i=0; i<teams.size(); i++)
+                    if (teams[i]->getId() == team_id)
+                        t = teams[i];
+                if (m != nullptr && t != nullptr) {
+                    m->setAwayTeam(t);
+                    std::cout << "Away team set!\n";
+                }
+                else std::cout << "Match or team not found!\n";
+                break;
+            }
+            case 5: {
+                int match_id;
+                float possession;
+                std::cout << "Id: \n";
+                std::cin >> match_id;
+                std::cout<<"Possession: \n";
+                std::cin>>possession;
+                bool found=false;
+                for (int i=0; i<matches.size(); i++) {
+                    if (matches[i]->getId() == match_id) {
+                        found=true;
+                        matches[i]->setHomePossession(possession);
+                    }
+                }
+                if (!found) std::cout<<"Match not found\n";
+                break;
+            }
+            case 6: {
+                int match_id;
+                std::cout << "Id: \n";
+                std::cin >> match_id;
+                bool found=false;
+                for (int i=0; i<matches.size(); i++) {
+                    if (matches[i]->getId() == match_id) {
+                        found=true;
+                        std::cout<<"Probability of the home team to win: "<<matches[i]->victory_probability()*100<<"%\n";
+                    }
+                }
+                if (!found) std::cout<<"Match not found\n";
+                break;
+            }
+            case 7: {
+                int match_id;
+                std::cout << "Id: \n";
+                std::cin >> match_id;
+                bool found=false;
+                for (int i=0; i<matches.size(); i++) {
+                    if (matches[i]->getId() == match_id) {
+                        found=true;
+                        std::cout<<"Incepe meciul!!!\n";
+                        matches[i]->match_simulation();
+                    }
+                }
+                if (!found) std::cout<<"Match not found\n";
+                break;
+            }
+            case 0: ok = false; break;
+            default: std::cout << "Invalid option!\n"; break;
+        }
+    }
+}
+
+int main() {
+    Menu menu;
+    menu.start();
+    return 0;
 }
