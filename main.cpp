@@ -69,6 +69,7 @@ public:
     void remove_player(int player_id);
     int getId() const;
     int getPlayersCount() const;
+    Coach* getHeadCoach() const;
     void setHeadCoach(Coach* coach);
 };
 
@@ -100,6 +101,7 @@ public:
     void coach_improvement();
     int getId() const;
     void setTeam(Team*);
+    Team* getTeam() const;
 };
 
 class Match {
@@ -279,7 +281,7 @@ std::ostream& operator<<(std::ostream& os, const Player &obj) {
     if (obj.ratings) {
         os<<"Ratings: \n";
         for (int i=0;i<obj.matches_played;i++)
-            os<<"Match "<<i<<": "<<obj.ratings[i]<<"\n";
+            os<<"Match "<<i+1<<": "<<obj.ratings[i]<<"\n";
     }
     if (obj.team != nullptr)
         os << "Team: " << obj.team->getName() << "\n";
@@ -300,24 +302,31 @@ std::istream& operator>>(std::istream& is, Player &obj) {
     std::cout<<"\n";
     std::cout<<"Age: ";
     is>>age;
+    if (age < 0) age = 0;
     obj.age=age;
     std::cout<<"\n";
     std::cout<<"Goal number: ";
     is>>goal_number;
+    if (goal_number < 0) goal_number = 0;
     obj.goal_number=goal_number;
     std::cout<<"\n";
     std::cout<<"Matches Played: ";
     is>>matches;
+    if (matches < 0) matches = 0;
     obj.matches_played=matches;
     std::cout<<"\n";
-    std::cout<<"Ratings: \n";
     delete[] obj.ratings;
-    obj.ratings = new double[obj.matches_played];
-    for (int i=0; i<obj.matches_played; i++) {
-        std::cout<<"Match "<<i<<": ";
-        is>>match_rating;
-        obj.ratings[i]=match_rating;
+    obj.ratings = nullptr;
+    if (obj.matches_played > 0) {
+        std::cout << "Ratings: \n";
+        obj.ratings = new double[obj.matches_played];
+        for (int i = 0; i < obj.matches_played; i++) {
+            std::cout << "Match " << i+1 << ": ";
+            is >> match_rating;
+            obj.ratings[i] = match_rating;
+        }
     }
+
     return is;
 }
 
@@ -471,12 +480,18 @@ int Team::getPlayersCount() const{
 }
 
 void Team::setName(const char* new_name) {
+    if (new_name == nullptr) return;
     delete[] this->name;
-    this->name=strcpy(new char[strlen(new_name)+1], new_name);
+    this->name = new char[strlen(new_name) + 1];
+    strcpy(this->name, new_name);
 }
 
 const char* Team::getName() const{
     return this->name;
+}
+
+Coach* Team::getHeadCoach() const {
+    return headCoach;
 }
 
 void Team::setHeadCoach(Coach* coach) {
@@ -516,6 +531,7 @@ void Team::remove_player(int player_id) {
         if (players[i]->getId()==player_id) {
             players[i]->setTeam(nullptr);
             players.erase(players.begin()+i);
+            std::cout << "Player removed from the team.\n";
             return;
         }
     }
@@ -598,9 +614,12 @@ Coach& Coach::operator=(const Coach &obj) {
 const char *Coach::getName() const {
     return this->name;
 }
+
 void Coach::setName(char *new_name) {
+    if (new_name == nullptr) return;
     delete[] this->name;
-    this->name = strcpy(new char[strlen(new_name)+1], new_name);
+    this->name = new char[strlen(new_name) + 1];
+    strcpy(this->name, new_name);
 }
 
 int Coach::getId() const {
@@ -629,18 +648,25 @@ std::istream &operator>>(std::istream &is, Coach &obj) {
     obj.setName(name);
     std::cout<<"Age : ";
     is>>new_age;
+    if (new_age < 0) new_age = 0;
     obj.age=new_age;
     std::cout<<"Years of experience: ";
     is>>years;
+    if (years< 0) years = 0;
     obj.experience_years=years;
     std::cout<<"Manager boost: ";
     is>>boost;
+    if (boost < 0) boost = 0;
     obj.manager_boost=boost;
     return is;
 }
 
 void Coach::setTeam(Team* new_team) {
     team = new_team;
+}
+
+Team* Coach::getTeam() const {
+    return team;
 }
 
 double Coach::effiency_calculator() {
@@ -940,8 +966,11 @@ void Menu::player_menu() {
                 break;
             }
             case 2: {
-                for (int i=0; i<players.size(); i++)
-                    std::cout<<*players[i]<<"\n";
+                if (players.empty())
+                    std::cout << "There are no players.\n";
+                else
+                    for (int i=0; i<players.size(); i++)
+                        std::cout << *players[i] << "\n";
                 break;
             }
 
@@ -1014,8 +1043,11 @@ void Menu::team_menu() {
 
             }
             case 2: {
-                for (int i=0; i<teams.size(); i++)
-                    std::cout<<*teams[i]<<"\n";
+                if (teams.empty())
+                    std::cout << "There are no teams.\n";
+                else
+                    for (int i=0; i<teams.size(); i++)
+                        std::cout << *teams[i] << "\n";
                 break;
             }
             case 3: {
@@ -1033,10 +1065,15 @@ void Menu::team_menu() {
                     if (players[i]->getId() == player_id)
                         p = players[i];
                 if (t != nullptr && p != nullptr) {
+                    if (p->getTeam() != nullptr) {
+                        std::cout << "Player already belongs to a team!\n";
+                        break;
+                    }
                     t->add_player(p);
                     p->setTeam(t);
                     std::cout << "Player added to team!\n";
-                } else {
+                }
+                else {
                     std::cout << "Team or player not found!\n";
                 }
                 break;
@@ -1053,7 +1090,6 @@ void Menu::team_menu() {
                         t = teams[i];
                 if (t != nullptr) {
                     t->remove_player(player_id);
-                    std::cout<<"Player removed from the team\n";
                 } else {
                     std::cout << "Team not found!\n";
                 }
@@ -1078,6 +1114,10 @@ void Menu::team_menu() {
                     if (coaches[i]->getId() == coach_id)
                         c = coaches[i];
                 if (t != nullptr && c != nullptr) {
+                    if (t->getHeadCoach() != nullptr)
+                        t->getHeadCoach()->setTeam(nullptr);
+                    if (c->getTeam() != nullptr)
+                        c->getTeam()->setHeadCoach(nullptr);
                     t->setHeadCoach(c);
                     c->setTeam(t);
                     std::cout << "Head coach set!\n";
@@ -1240,6 +1280,10 @@ void Menu::match_menu() {
                     if (teams[i]->getId() == team_id)
                         t = teams[i];
                 if (m != nullptr && t != nullptr) {
+                    if (m->getAwayTeam() == t) {
+                        std::cout << "Home team cannot be the same as away team!\n";
+                        break;
+                    }
                     m->setHomeTeam(t);
                     std::cout << "Home team set!\n";
                 }
@@ -1261,6 +1305,10 @@ void Menu::match_menu() {
                     if (teams[i]->getId() == team_id)
                         t = teams[i];
                 if (m != nullptr && t != nullptr) {
+                    if (m->getHomeTeam() == t) {
+                        std::cout << "Away team cannot be the same as home team!\n";
+                        break;
+                    }
                     m->setAwayTeam(t);
                     std::cout << "Away team set!\n";
                 }
