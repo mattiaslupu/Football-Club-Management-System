@@ -1295,7 +1295,7 @@ void Menu::match_menu() {
                 for (int i=0; i<matches.size(); i++) {
                     if (matches[i]->getId() == match_id) {
                         found=true;
-                        std::cout<<"Incepe meciul!!!\n";
+                        std::cout<<"The match is about to begin!!!\n";
                         matches[i]->match_simulation();
                     }
                 }
