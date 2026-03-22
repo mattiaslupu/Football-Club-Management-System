@@ -99,6 +99,7 @@ public:
     double effiency_calculator();
     void coach_improvement();
     int getId() const;
+    void setTeam(Team*);
 };
 
 class Match {
@@ -292,7 +293,7 @@ std::istream& operator>>(std::istream& is, Player &obj) {
     int age;
     int goal_number;
     int matches;
-    int match_rating;
+    double match_rating;
     std::cout<<"Name: ";
     is>>name;
     obj.setName(name);
@@ -358,7 +359,7 @@ double Player::calculate_value() {
     double suma=0;
     for (int i=0; i<matches_played; i++) suma+=ratings[i];
     double medie=suma/matches_played;
-    double value=((medie*goal_number)/(1+age))*log(matches_played);
+    double value=((medie*goal_number)/(1+age))*log(matches_played+1);
     return value;
 
 }
@@ -503,7 +504,7 @@ void Team::pay_salaries() {
         long salary = static_cast<long>(players[i]->calculate_value() * 1000);
         budget -= salary;
     }
-    std::cout << "Salaries paid. Remaining budget: " << budget << "\n";
+    std::cout << "Salaries paid. Remaining budget: " << budget << "M€\n";
 }
 
 void Team::add_player(Player* player) {
@@ -513,6 +514,7 @@ void Team::add_player(Player* player) {
 void Team::remove_player(int player_id) {
     for (int i=0; i<players.size(); i++) {
         if (players[i]->getId()==player_id) {
+            players[i]->setTeam(nullptr);
             players.erase(players.begin()+i);
             return;
         }
@@ -622,19 +624,23 @@ std::istream &operator>>(std::istream &is, Coach &obj) {
     char name[256];
     int new_age, years;
     float boost;
-    std::cout<<"Name: \n";
+    std::cout<<"Name: ";
     is>>name;
     obj.setName(name);
-    std::cout<<"Age : \n";
+    std::cout<<"Age : ";
     is>>new_age;
     obj.age=new_age;
-    std::cout<<"Years of experience: \n";
+    std::cout<<"Years of experience: ";
     is>>years;
     obj.experience_years=years;
-    std::cout<<"Manager boost: \n";
+    std::cout<<"Manager boost: ";
     is>>boost;
     obj.manager_boost=boost;
     return is;
+}
+
+void Coach::setTeam(Team* new_team) {
+    team = new_team;
 }
 
 double Coach::effiency_calculator() {
@@ -821,10 +827,14 @@ Team* Match::getAwayTeam() const {
 
 double Match::victory_probability() {
     if (home_team == nullptr || away_team == nullptr) return 0;
-    double home_stats=(home_team->calculate_team_force()*1.1)+(home_possession*2)+home_shots_on_target;
-    double total=home_stats+away_team->calculate_team_force()+(100-home_possession)*2+away_shots_on_target;
-    double probability=home_stats/total;
-    return probability;
+    float possession;
+    if (home_possession > 0)
+        possession = home_possession;
+    else
+        possession = 50.0f;
+    double home_stats = (home_team->calculate_team_force()*1.1) + (possession*2) + home_shots_on_target;
+    double total = home_stats + away_team->calculate_team_force() + (100-possession)*2 + away_shots_on_target;
+    return home_stats/total;
 }
 
 void Match::match_simulation() {
@@ -836,7 +846,6 @@ void Match::match_simulation() {
     away_shots_on_target = 0;
     home_goals = 0;
     away_goals = 0;
-    srand(time(0));
     for (int minut=1; minut<=90; minut++) {
         std::cout << "Minute " << minut << "...\n";
         double random = (double)rand() / RAND_MAX;
@@ -963,7 +972,7 @@ void Menu::player_menu() {
                 for (int i=0; i<players.size(); i++) {
                     if (players[i]->getId()==id) {
                         found=true;
-                        std::cout<<"Player value: "<<players[i]->calculate_value();
+                        std::cout<<"Player value: "<<players[i]->calculate_value()<<" M€";
                     }
                 }
                 if (!found)
@@ -1070,8 +1079,10 @@ void Menu::team_menu() {
                         c = coaches[i];
                 if (t != nullptr && c != nullptr) {
                     t->setHeadCoach(c);
+                    c->setTeam(t);
                     std::cout << "Head coach set!\n";
-                } else {
+                }
+                else {
                     std::cout << "Team or coach not found!\n";
                 }
                 break;
@@ -1125,7 +1136,7 @@ void Menu::coach_menu() {
         std::cout << "4. Improve Coach\n";
         std::cout << "0. Back\n";
         std::cout << "========================================\n";
-        std::cout << "Choose an option: \n";
+        std::cout << "Choose an option: ";
         std::cin >> option;
         switch (option) {
             case 1: {
@@ -1309,6 +1320,7 @@ void Menu::match_menu() {
 }
 
 int main() {
+    srand(time(0));
     Menu menu;
     menu.start();
     return 0;
