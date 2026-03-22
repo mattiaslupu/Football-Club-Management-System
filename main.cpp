@@ -438,7 +438,7 @@ std::ostream& operator<<(std::ostream& os, const Team& obj) {
     os<<"Name: "<<obj.name<<"\n";
     os << "Players: \n";
     for (int i = 0; i < obj.players.size(); i++)
-        os << *obj.players[i] << "\n";
+        os <<" - "<< obj.players[i]->getName() << "\n";
 
     if (obj.headCoach != nullptr)
         os << "Head Coach: " << obj.headCoach->getName() << "\n";
@@ -838,23 +838,24 @@ void Match::match_simulation() {
     away_goals = 0;
     srand(time(0));
     for (int minut=1; minut<=90; minut++) {
-        std::cout << "Minutul " << minut << "...\n";
+        std::cout << "Minute " << minut << "...\n";
         double random = (double)rand() / RAND_MAX;
+        double random2 = (double)rand() / RAND_MAX;
         double prob = victory_probability();
-        if (random < 0.10) {
-            if (random < prob * 0.10) {
+        if (random < 0.03) {
+            if (random2 < prob) {
                 home_goals++;
                 home_shots_on_target++;
                 std::cout << "*****GOOOOOOOOL " << home_team->getName() << "!!!!*****\n";
-                std::cout << "Scor: " << home_goals << " - " << away_goals << "\n";
+                std::cout << "Score: " << home_goals << " - " << away_goals << "\n";
             } else {
                 away_goals++;
                 away_shots_on_target++;
                 std::cout << "*****GOOOOOOOOL " << away_team->getName() << "!!!!*****\n";
-                std::cout << "Scor: " << home_goals << " - " << away_goals << "\n";
+                std::cout << "Score: " << home_goals << " - " << away_goals << "\n";
             }
-        } else if (random < 0.30) {
-            if (random < prob * 0.30) {
+        } else if (random < 0.15) {
+            if (random2 < prob) {
                 home_shots_on_target++;
                 std::cout << "Shot on target for " << home_team->getName() << " but it was unlucky!\n";
             } else {
@@ -997,7 +998,7 @@ void Menu::team_menu() {
         switch(option) {
             case 1: {
                 Team *t= new Team();
-                std::cout<<"New Team: \n";
+                std::cout<<"New Team: ";
                 std::cin>>*t;
                 teams.push_back(t);
                 break;
@@ -1010,9 +1011,9 @@ void Menu::team_menu() {
             }
             case 3: {
                 int team_id, player_id;
-                std::cout << "Team id: \n";
+                std::cout << "Team id: ";
                 std::cin >> team_id;
-                std::cout << "Player id: \n";
+                std::cout << "Player id: ";
                 std::cin >> player_id;
                 Team* t = nullptr;
                 Player* p = nullptr;
@@ -1033,9 +1034,9 @@ void Menu::team_menu() {
             }
             case 4: {
                 int team_id, player_id;
-                std::cout << "Team id: \n";
+                std::cout << "Team id: ";
                 std::cin >> team_id;
-                std::cout << "Player id: \n";
+                std::cout << "Player id: ";
                 std::cin >> player_id;
                 Team* t = nullptr;
                 for (int i=0; i<teams.size(); i++)
@@ -1055,9 +1056,9 @@ void Menu::team_menu() {
                     break;
                 }
                 int team_id, coach_id;
-                std::cout << "Team id: \n";
+                std::cout << "Team id: ";
                 std::cin >> team_id;
-                std::cout << "Coach id: \n";
+                std::cout << "Coach id: ";
                 std::cin >> coach_id;
                 Team* t = nullptr;
                 Coach* c = nullptr;
@@ -1077,7 +1078,7 @@ void Menu::team_menu() {
             }
             case 6: {
                 int id;
-                std::cout<<"Id: ";
+                std::cout<<"Team Id: ";
                 std::cin>>id;
                 bool found=false;
                 for (int i = 0; i < teams.size(); i++) {
@@ -1093,7 +1094,7 @@ void Menu::team_menu() {
             }
             case 7: {
                 int id;
-                std::cout<<"Id: \n";
+                std::cout<<"Team Id: ";
                 std::cin>>id;
                 bool found=false;
                 for (int i = 0; i < teams.size(); i++) {
@@ -1144,7 +1145,7 @@ void Menu::coach_menu() {
             }
             case 3: {
                 int id;
-                std::cout<<"Id: \n";
+                std::cout<<"Coach Id: ";
                 std::cin>>id;
                 bool found=false;
                 for (int i=0; i<coaches.size(); i++) {
@@ -1158,7 +1159,7 @@ void Menu::coach_menu() {
             }
             case 4: {
                 int id;
-                std::cout<<"Id: \n";
+                std::cout<<"Coach Id: ";
                 std::cin>>id;
                 bool found=false;
                 for (int i=0; i<coaches.size(); i++) {
@@ -1195,7 +1196,7 @@ void Menu::match_menu() {
         std::cout << "7. Simulate Match\n";
         std::cout << "0. Back\n";
         std::cout << "========================================\n";
-        std::cout << "Choose an option: \n";
+        std::cout << "Choose an option: ";
         std::cin >> option;
         switch (option) {
             case 1: {
@@ -1258,9 +1259,9 @@ void Menu::match_menu() {
             case 5: {
                 int match_id;
                 float possession;
-                std::cout << "Id: \n";
+                std::cout << "Match Id: ";
                 std::cin >> match_id;
-                std::cout<<"Possession: \n";
+                std::cout<<"Possession for the Home Team: ";
                 std::cin>>possession;
                 bool found=false;
                 for (int i=0; i<matches.size(); i++) {
@@ -1274,7 +1275,7 @@ void Menu::match_menu() {
             }
             case 6: {
                 int match_id;
-                std::cout << "Id: \n";
+                std::cout << "Match Id: ";
                 std::cin >> match_id;
                 bool found=false;
                 for (int i=0; i<matches.size(); i++) {
@@ -1288,7 +1289,7 @@ void Menu::match_menu() {
             }
             case 7: {
                 int match_id;
-                std::cout << "Id: \n";
+                std::cout << "Match Id: ";
                 std::cin >> match_id;
                 bool found=false;
                 for (int i=0; i<matches.size(); i++) {
